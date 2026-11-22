@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anatoma 3D — Human Body Atlas &amp; Simulation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Three.js r147 UMD + OrbitControls -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+  <!-- MODERN BALANCED STUDIO HEADER (1fr auto 1fr) -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">🧬</div>
+      <div class="brand-text">
+        <div class="brand-title" data-i18n="appTitle">Anatoma 3D</div>
+        <div class="brand-sub" data-i18n="appSub">Human Body Atlas &amp; Sim</div>
+      </div>
+    </div>
+
+    <!-- Centered Global Atlas Search Pill -->
+    <button class="topbar-search-pill" id="btn-open-directory">
+      <span class="search-ico">🔍</span>
+      <span data-i18n="dirBtn">A–Z Atlas</span>
+      <span class="search-kbd">48</span>
+    </button>
+
+    <div class="header-right">
+      <div class="stats-group">
+        <button class="stat-pill mastery-trigger" id="stat-discovered" title="Mastery & Medals">🏆 1/48 Organs</button>
+        <span class="stat-pill streak" id="stat-streak">🔥 0</span>
+        <span class="stat-pill xp" id="stat-xp">0 XP</span>
+      </div>
+
+      <!-- Theme Switcher (Midnight, Clinical Light, Bio Emerald, Warm Atlas) -->
+      <div class="theme-switch" role="group" aria-label="Theme">
+        <button class="theme-dot active" data-theme-pick="midnight" data-i18n-title="themeMidnight" title="Midnight Studio">
+          <span class="swatch sw-midnight"></span>
+        </button>
+        <button class="theme-dot" data-theme-pick="light" data-i18n-title="themeLight" title="Clinical Light">
+          <span class="swatch sw-light"></span>
+        </button>
+        <button class="theme-dot" data-theme-pick="emerald" data-i18n-title="themeEmerald" title="Bio Emerald">
+          <span class="swatch sw-emerald"></span>
+        </button>
+        <button class="theme-dot" data-theme-pick="warm" data-i18n-title="themeWarm" title="Warm Atlas">
+          <span class="swatch sw-warm"></span>
+        </button>
+      </div>
+
+      <!-- Language Switcher (English / Hebrew) -->
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="he">עב</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN 3-COLUMN APP WORKSPACE -->
+  <main class="workspace">
+    <!-- START SIDEBAR: DYNAMIC TOPIC DRAWER (Opens selected bottom-dock topic) -->
+    <aside class="sidebar sidebar-start" id="topic-drawer">
+      <div class="drawer-topbar">
+        <span class="drawer-active-label" id="drawer-active-label" data-i18n="bodySystems">Body Systems</span>
+        <button class="drawer-close-btn" id="btn-close-drawer" aria-label="Collapse panel" title="Collapse">✕</button>
+      </div>
+
+      <section class="panel-block topic-pane active" data-topic="systems">
+        <div class="panel-heading">
+          <h3 data-i18n="bodySystems">Body Systems</h3>
+          <div class="mini-actions">
+            <button class="mini-btn" id="btn-show-all-sys" data-i18n="allBtn">All</button>
+            <button class="mini-btn" id="btn-organs-only" data-i18n="organsOnlyBtn">Organs</button>
+          </div>
+        </div>
+        <div class="systems-list" id="systems-list"></div>
+      </section>
+
+      <section class="panel-block topic-pane" data-topic="dissect">
+        <div class="panel-heading">
+          <h3 data-i18n="dissection3d">3D Dissection</h3>
+        </div>
+        <div class="slider-row">
+          <div class="slider-label">
+            <span data-i18n="explodedView">Exploded View</span>
+            <strong id="explode-val">0%</strong>
+          </div>
+          <input type="range" id="explode-slider" min="0" max="1" step="0.01" value="0" />
+        </div>
+        <div class="slider-row">
+          <div class="slider-label">
+            <span data-i18n="shellOpacity">Body Shell</span>
+            <strong id="skin-val">40%</strong>
+          </div>
+          <input type="range" id="skin-slider" min="0" max="0.4" step="0.01" value="0.16" />
+        </div>
+        <div class="slider-row">
+          <div class="slider-label">
+            <span data-i18n="mriSlice">MRI Cross-Section</span>
+            <strong id="mri-val">100%</strong>
+          </div>
+          <input type="range" id="mri-slider" min="0.05" max="1" step="0.01" value="1" />
+        </div>
+      </section>
+
+      <section class="panel-block topic-pane" data-topic="tours">
+        <div class="panel-heading">
+          <h3 data-i18n="guidedTours">Guided 3D Tours</h3>
+        </div>
+        <div class="tours-list" id="tours-list"></div>
+      </section>
+
+      <section class="panel-block topic-pane" data-topic="lab">
+        <div class="panel-heading">
+          <h3 data-i18n="pathologyLab">Pathology &amp; Health Lab</h3>
+          <button class="btn-tts mini-tts" id="btn-pathology-tts" title="Read Aloud">🔊 <span data-i18n="readAloud">Read Aloud</span></button>
+        </div>
+        <div class="pathology-grid" id="pathology-grid"></div>
+        <p class="preset-desc" id="pathology-desc"></p>
+      </section>
+
+      <section class="panel-block topic-pane" data-topic="physio">
+        <div class="panel-heading">
+          <h3 data-i18n="livingSim">Physiology Sim</h3>
+        </div>
+        <div class="presets-grid" id="presets-grid"></div>
+        <p class="preset-desc" id="preset-desc"></p>
+      </section>
+    </aside>
+
+    <!-- CENTER: INTERACTIVE 3D HUMAN BODY STAGE -->
+    <section class="viewport-wrap">
+      <div id="viewport"></div>
+      <svg id="labels-svg" aria-hidden="true"></svg>
+      <div id="labels-layer"></div>
+      <div id="hover-tooltip"></div>
+
+      <!-- Floating Pill Toolbar -->
+      <div class="viewport-toolbar">
+        <div class="sex-switch" role="group" aria-label="Body Sex">
+          <button class="sex-btn active" data-sex="male">
+            <span>♂</span> <span data-i18n="maleLabel">Male</span>
+          </button>
+          <button class="sex-btn" data-sex="female">
+            <span>♀</span> <span data-i18n="femaleLabel">Female</span>
+          </button>
+        </div>
+        <span class="tool-sep" aria-hidden="true"></span>
+        <button class="tool-btn" id="btn-labels">
+          <span>🏷️</span> <span data-i18n="toolLabels">Labels</span>
+        </button>
+        <button class="tool-btn active" id="btn-flows">
+          <span>⚡</span> <span data-i18n="toolFlows">Flows</span>
+        </button>
+        <button class="tool-btn" id="btn-xray">
+          <span>🩻</span> <span data-i18n="toolXRay">X-Ray</span>
+        </button>
+        <button class="tool-btn" id="btn-rotate">
+          <span>🔄</span> <span data-i18n="toolRotate">Auto-Spin</span>
+        </button>
+        <button class="tool-btn" id="btn-sound">
+          <span>🔇</span> <span data-i18n="toolSound">Sound</span>
+        </button>
+        <button class="tool-btn" id="btn-reset-cam">
+          <span>🎯</span> <span data-i18n="toolReset">Reset</span>
+        </button>
+      </div>
+
+      <!-- Floating Guided Tour Banner -->
+      <div class="tour-banner" id="tour-banner" style="display: none;">
+        <div class="tour-banner-top">
+          <strong id="tour-title"></strong>
+          <span class="tour-step-pill" id="tour-step-pill"></span>
+          <button class="tour-close-btn" id="btn-tour-exit">✕</button>
+        </div>
+        <p class="tour-note" id="tour-note"></p>
+        <div class="tour-controls">
+          <button class="mini-btn" id="btn-tour-prev" data-i18n="tourPrev">← Prev</button>
+          <button class="mini-btn" id="btn-tour-voice" data-i18n="tourVoice">🔊 Narrate</button>
+          <button class="mini-btn" id="btn-tour-autoplay" data-i18n="tourPlay">▶ Auto</button>
+          <button class="mini-btn" id="btn-tour-next" data-i18n="tourNext">Next →</button>
+        </div>
+      </div>
+
+      <!-- Bottom Live Vitals & ECG Floating Dock -->
+      <div class="vitals-hud">
+        <div class="ecg-box">
+          <span class="ecg-label" data-i18n="liveEcg">● LIVE ECG</span>
+          <canvas id="ecg-canvas" width="168" height="42"></canvas>
+        </div>
+        <div class="vitals-metrics">
+          <div class="vital-item">
+            <span class="vital-label" data-i18n="vitalHr">Heart Rate</span>
+            <span class="vital-value bpm"><span id="vital-bpm">72</span> <small data-i18n="bpmUnit">BPM</small></span>
+          </div>
+          <div class="vital-item">
+            <span class="vital-label" data-i18n="vitalResp">Breathing</span>
+            <span class="vital-value resp"><span id="vital-resp">15</span> <small data-i18n="respUnit">/min</small></span>
+          </div>
+          <div class="vital-item">
+            <span class="vital-label" data-i18n="vitalSpo2">Blood O₂</span>
+            <span class="vital-value spo2" id="vital-spo2">98%</span>
+          </div>
+          <div class="vital-item">
+            <span class="vital-label" data-i18n="vitalBp">Blood Press.</span>
+            <span class="vital-value" id="vital-bp">118/76</span>
+          </div>
+          <div class="vital-item">
+            <span class="vital-label" data-i18n="vitalBrain">Neural State</span>
+            <span class="vital-value brain" id="vital-brain">Balanced</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Floating Topic Dock (Bottom Center) -->
+      <nav class="topic-dock" id="topic-dock" aria-label="Control Topics">
+        <button class="dock-item active" data-dock="systems">
+          <span class="dock-ico">🫀</span>
+          <span class="dock-label" data-i18n="dockSystems">Systems</span>
+        </button>
+        <button class="dock-item" data-dock="dissect">
+          <span class="dock-ico">✂️</span>
+          <span class="dock-label" data-i18n="dockDissect">Dissect</span>
+        </button>
+        <button class="dock-item" data-dock="tours">
+          <span class="dock-ico">🧭</span>
+          <span class="dock-label" data-i18n="dockTours">Tours</span>
+        </button>
+        <button class="dock-item" data-dock="lab">
+          <span class="dock-ico">🦠</span>
+          <span class="dock-label" data-i18n="dockLab">Health Lab</span>
+        </button>
+        <button class="dock-item" data-dock="physio">
+          <span class="dock-ico">⚡</span>
+          <span class="dock-label" data-i18n="dockPhysio">Physiology</span>
+        </button>
+      </nav>
+    </section>
+
+    <!-- END SIDEBAR: ENCYCLOPEDIA INSPECTOR & GAME HUB -->
+    <aside class="sidebar sidebar-end">
+      <nav class="panel-mode-tabs" aria-label="Application Modes">
+        <button class="mode-tab active" data-mode="explore">
+          <span class="tab-ico">📖</span>
+          <span data-i18n="tabExplore">Encyclopedia</span>
+        </button>
+        <button class="mode-tab" data-mode="locate">
+          <span class="tab-ico">🎯</span>
+          <span data-i18n="tabLocate">Locate Organ</span>
+        </button>
+        <button class="mode-tab" data-mode="doctor">
+          <span class="tab-ico">🩺</span>
+          <span data-i18n="tabDoctor">Body Doctor</span>
+        </button>
+        <button class="mode-tab" data-mode="quiz">
+          <span class="tab-ico">🧠</span>
+          <span data-i18n="tabQuiz">Mastery Quiz</span>
+        </button>
+      </nav>
+      <div id="encyclopedia-content"></div>
+      <div id="game-panel" style="display: none;"></div>
+    </aside>
+  </main>
+
+  <!-- A-Z ENCYCLOPEDIA ATLAS MODAL -->
+  <div class="modal-backdrop" id="directory-modal" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+      <div class="modal-head">
+        <h2 data-i18n="dirTitle">Human Body Encyclopedia Atlas</h2>
+        <button class="modal-close" id="btn-close-directory" aria-label="Close">×</button>
+      </div>
+      <div class="modal-search-bar">
+        <input
+          type="text"
+          id="dir-search"
+          data-i18n-placeholder="dirSearchPlaceholder"
+          placeholder="Search any organ, Latin name, system, or function..."
+        />
+      </div>
+      <div class="modal-body" id="dir-grid"></div>
+    </div>
+  </div>
+
+  <!-- MASTERY & SYSTEM MEDALS MODAL -->
+  <div class="modal-backdrop" id="mastery-modal" role="dialog" aria-modal="true">
+    <div class="modal-dialog mastery-dialog">
+      <div class="modal-head">
+        <div>
+          <h2 data-i18n="masteryTitle">🏆 Anatomy Mastery &amp; Medals</h2>
+          <div class="mastery-sub" data-i18n="masterySubtitle">Your progress is saved automatically in your browser.</div>
+        </div>
+        <button class="modal-close" id="btn-close-mastery" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body" id="mastery-body"></div>
+    </div>
+  </div>
+
+  <!-- APPLICATION SCRIPTS -->
+  <script src="js/data/encyclopedia.js"></script>
+  <script src="js/data/i18n_he.js"></script>
+  <script src="js/data/encyclopedia_extra.js"></script>
+  <script src="js/data/encyclopedia_systems.js"></script>
+  <script src="js/features.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/three/anatomyBuilder.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
