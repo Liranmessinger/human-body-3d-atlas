@@ -1,5 +1,5 @@
 /**
- * Anatoma 3D — Procedural Biological Audio (Web Audio Heartbeat) & Bilingual TTS Narrator
+ * Anatoma 3D — Procedural Biological Audio (Web Audio Stethoscope Heartbeat) & Bilingual TTS Narrator
  */
 (function (global) {
   'use strict';
@@ -17,7 +17,7 @@
         if (AudioCtx) this.ctx = new AudioCtx();
       }
       if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume();
+        this.ctx.resume().catch(() => {});
       }
       return this.ctx;
     }
@@ -25,7 +25,16 @@
     setEnabled(on) {
       this.enabled = !!on;
       if (this.enabled) {
-        this.ensureContext();
+        const ctx = this.ensureContext();
+        // Play an immediate heartbeat inside the user-gesture click to unlock audio & give instant feedback
+        if (ctx) {
+          const trigger = () => this.playHeartbeat();
+          if (ctx.state === 'suspended') {
+            ctx.resume().then(trigger).catch(() => {});
+          } else {
+            trigger();
+          }
+        }
       }
     }
 
@@ -33,32 +42,52 @@
       return this.enabled;
     }
 
-    // Realistic soft low-frequency "Lub-Dub" cardiac thump
+    // Realistic stethoscope "Lub-Dub" audible on laptops, phones, and headphones
     playHeartbeat() {
       if (!this.enabled) return;
       const ctx = this.ensureContext();
-      if (!ctx) return;
+      if (!ctx || ctx.state !== 'running') return;
 
       const now = ctx.currentTime;
-      this._thump(ctx, now, 62, 0.14, 0.22);       // "Lub" (AV valves closing)
-      this._thump(ctx, now + 0.19, 48, 0.11, 0.16); // "Dub" (semilunar valves closing)
+      // "Lub" (S1 — mitral & tricuspid valves closing): fuller, slightly longer
+      this._heartThump(ctx, now, 165, 62, 0.14, 0.62);
+      // "Dub" (S2 — aortic & pulmonary valves closing): slightly higher & crisper
+      this._heartThump(ctx, now + 0.19, 195, 78, 0.11, 0.45);
     }
 
-    _thump(ctx, startTime, freq, duration, gainPeak) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, startTime);
-      osc.frequency.exponentialRampToValueAtTime(24, startTime + duration);
+    _heartThump(ctx, startTime, startFreq, endFreq, duration, gainPeak) {
+      // Warm low-pass filter so harmonics sound organic like a real stethoscope
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(340, startTime);
+      filter.Q.setValueAtTime(1.4, startTime);
 
-      gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.exponentialRampToValueAtTime(gainPeak, startTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.0001, startTime);
+      masterGain.gain.exponentialRampToValueAtTime(gainPeak, startTime + 0.018);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(startTime);
-      osc.stop(startTime + duration + 0.02);
+      // Layer 1: Warm triangle body (provides rich harmonics audible on laptop/phone speakers)
+      const oscBody = ctx.createOscillator();
+      oscBody.type = 'triangle';
+      oscBody.frequency.setValueAtTime(startFreq, startTime);
+      oscBody.frequency.exponentialRampToValueAtTime(endFreq, startTime + duration);
+
+      // Layer 2: Deep chest sub-thump
+      const oscSub = ctx.createOscillator();
+      oscSub.type = 'sine';
+      oscSub.frequency.setValueAtTime(startFreq * 0.65, startTime);
+      oscSub.frequency.exponentialRampToValueAtTime(Math.max(38, endFreq * 0.7), startTime + duration);
+
+      oscBody.connect(filter);
+      oscSub.connect(filter);
+      filter.connect(masterGain);
+      masterGain.connect(ctx.destination);
+
+      oscBody.start(startTime);
+      oscSub.start(startTime);
+      oscBody.stop(startTime + duration + 0.03);
+      oscSub.stop(startTime + duration + 0.03);
     }
 
     // Built-in browser Text-to-Speech narration (EN & HE)
