@@ -278,8 +278,10 @@
 
       if (game.mode === 'explore') {
         selectOrganInEncyclopedia(hitId, true);
+        if (isCompactScreen()) openInfoSheet();
       } else {
         game.handleOrganClick(hitId);
+        if (isCompactScreen()) openInfoSheet();
       }
     });
 
@@ -574,6 +576,7 @@
       const infoBtn = e.target.closest('.sys-info-btn');
       if (infoBtn) {
         showSystemInEncyclopedia(infoBtn.dataset.system);
+        if (isCompactScreen()) openInfoSheet();
         return;
       }
       const childBtn = e.target.closest('[data-child-organ]');
@@ -582,6 +585,7 @@
         if (game.mode !== 'explore') switchMode('explore');
         selectOrganInEncyclopedia(orgId, true);
         renderSystemsList();
+        if (isCompactScreen()) openInfoSheet();
       }
     });
 
@@ -1572,9 +1576,10 @@
     });
 
     // =========================================================================
-    // 10G. DYNAMIC BOTTOM TOPIC DOCK & COLLAPSIBLE SIDEBAR DRAWER
+    // 10G. DYNAMIC BOTTOM TOPIC DOCK & RESPONSIVE MOBILE/TABLET BOTTOM SHEETS
     // =========================================================================
     const workspaceEl = document.querySelector('.workspace');
+    const infoDrawerEl = document.getElementById('info-drawer');
     const drawerTitleEl = document.getElementById('drawer-active-label');
     const TOPIC_TITLE_KEYS = {
       systems: 'bodySystems',
@@ -1585,18 +1590,47 @@
     };
     let activeTopic = 'systems';
 
+    function isCompactScreen() {
+      return window.innerWidth <= 1024;
+    }
+
     function updateDrawerTitle() {
       if (drawerTitleEl && activeTopic && TOPIC_TITLE_KEYS[activeTopic]) {
         drawerTitleEl.textContent = I18n.t(TOPIC_TITLE_KEYS[activeTopic]);
       }
     }
 
+    function closeInfoSheet() {
+      if (infoDrawerEl) infoDrawerEl.classList.remove('sheet-open');
+      const infoBtn = document.querySelector('.dock-item[data-dock="info"]');
+      if (infoBtn) infoBtn.classList.remove('active');
+    }
+
+    function openInfoSheet() {
+      if (!isCompactScreen()) return;
+      workspaceEl.classList.add('drawer-collapsed');
+      document.querySelectorAll('.dock-item').forEach((b) => b.classList.remove('active'));
+      if (infoDrawerEl) infoDrawerEl.classList.add('sheet-open');
+      const infoBtn = document.querySelector('.dock-item[data-dock="info"]');
+      if (infoBtn) infoBtn.classList.add('active');
+    }
+
     function selectTopic(topicId) {
+      if (topicId === 'info') {
+        if (infoDrawerEl && infoDrawerEl.classList.contains('sheet-open')) {
+          closeInfoSheet();
+        } else {
+          openInfoSheet();
+        }
+        return;
+      }
+
       // Clicking the already-open topic collapses the drawer for a wider 3D view!
       if (activeTopic === topicId && !workspaceEl.classList.contains('drawer-collapsed')) {
         collapseDrawer();
         return;
       }
+      closeInfoSheet();
       activeTopic = topicId;
       workspaceEl.classList.remove('drawer-collapsed');
 
@@ -1623,6 +1657,17 @@
     const btnCloseDrawer = document.getElementById('btn-close-drawer');
     if (btnCloseDrawer) {
       btnCloseDrawer.addEventListener('click', collapseDrawer);
+    }
+
+    const btnCloseInfoSheet = document.getElementById('btn-close-info-sheet');
+    if (btnCloseInfoSheet) {
+      btnCloseInfoSheet.addEventListener('click', closeInfoSheet);
+    }
+
+    // On phones & tablets, start with full-screen 3D view (both bottom sheets collapsed)
+    if (isCompactScreen()) {
+      collapseDrawer();
+      closeInfoSheet();
     }
 
     // =========================================================================

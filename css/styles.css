@@ -739,6 +739,12 @@ input[type='range']::-webkit-slider-thumb:hover {
   width: 100%;
   height: 100%;
   direction: ltr;
+  touch-action: none;
+}
+
+.mobile-only-dock,
+.info-sheet-bar {
+  display: none;
 }
 
 /* SVG Leader Lines Layer */
@@ -1545,39 +1551,271 @@ html[dir="rtl"] .organ-pin {
 }
 
 /* ==========================================================================
-   RESPONSIVE BREAKPOINTS
+   RESPONSIVE BREAKPOINTS (NATIVE TABLET & MOBILE BOTTOM-SHEET EXPERIENCE)
    ========================================================================== */
-@media (max-width: 1180px) {
+@media (max-width: 1220px) {
   .workspace {
-    grid-template-columns: 238px 1fr 320px;
+    grid-template-columns: 268px 1fr 310px;
   }
-  .stats-group .stat-pill:first-child {
-    display: none;
+  .workspace.drawer-collapsed {
+    grid-template-columns: 0px 1fr 310px;
   }
   .vitals-metrics {
     grid-template-columns: repeat(3, 1fr);
   }
+  .vital-item:nth-child(4),
+  .vital-item:nth-child(5) {
+    display: none;
+  }
 }
 
-@media (max-width: 880px) {
+/* TABLETS & PHONES: Full-Screen 3D Stage + Smooth Slide-Up Bottom Sheets */
+@media (max-width: 1024px) {
   html, body {
-    overflow: auto;
+    height: 100dvh;
+    overflow: hidden;
   }
+
   .topbar {
+    height: 54px;
     display: flex;
-    flex-wrap: wrap;
-    height: auto;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .brand-logo {
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+    border-radius: 9px;
+  }
+  .brand-title {
+    font-size: 13.5px;
+  }
+  .brand-sub {
+    display: none;
+  }
+
+  .topbar-search-pill {
+    min-width: auto;
+    padding: 6px 11px;
+    font-size: 11.5px;
+    gap: 5px;
+  }
+
+  .stats-group .streak,
+  .stats-group .xp {
+    display: none;
+  }
+
+  .header-right {
+    gap: 5px;
+  }
+
+  /* Full-screen 3D Workspace */
+  .workspace,
+  .workspace.drawer-collapsed {
+    display: block;
+    height: calc(100dvh - 54px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .viewport-wrap {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Show mobile Encyclopedia dock pill & sheet close bar */
+  .mobile-only-dock {
+    display: inline-flex;
+  }
+
+  .info-sheet-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .sheet-handle {
+    width: 38px;
+    height: 4px;
+    border-radius: 99px;
+    background: rgba(148, 163, 184, 0.38);
+    margin-inline-start: calc(50% - 19px);
+  }
+
+  /* Both Sidebars become sleek floating Bottom Sheets above the Topic Dock */
+  .sidebar-start,
+  .sidebar-end {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: 66px;
+    max-height: 56dvh;
+    width: auto;
+    border: 1px solid var(--hairline-strong) !important;
+    border-radius: 18px;
+    padding: 12px !important;
+    box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.45);
+    z-index: 28;
+    transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Topic Drawer open/closed states on mobile/tablet */
+  .workspace.drawer-collapsed .sidebar-start {
+    transform: translateY(120%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Info / Encyclopedia Sheet open/closed states on mobile/tablet */
+  .sidebar-end {
+    transform: translateY(120%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sidebar-end.sheet-open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Scrollable single-line Top 3D Toolbar */
+  .viewport-toolbar {
+    top: 8px;
+    max-width: calc(100% - 16px);
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 4px;
+    gap: 3px;
+  }
+  .viewport-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+  .tool-btn,
+  .sex-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  /* Compact Vitals & ECG Strip */
+  .vitals-hud {
+    bottom: 62px;
+    left: 10px;
+    right: 10px;
+    padding: 6px 10px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+  .ecg-box {
+    min-width: 94px;
+  }
+  .ecg-label {
+    font-size: 8.5px;
+  }
+  #ecg-canvas {
+    width: 94px;
+    height: 28px;
+  }
+  .vital-label {
+    font-size: 9px;
+  }
+  .vital-value {
+    font-size: 14px;
+  }
+
+  /* Scrollable Bottom Topic Dock */
+  .topic-dock {
+    bottom: max(10px, env(safe-area-inset-bottom));
+    max-width: calc(100% - 16px);
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 4px 6px;
+    gap: 4px;
+  }
+  .topic-dock::-webkit-scrollbar {
+    display: none;
+  }
+  .dock-item {
+    padding: 6px 10px;
+    font-size: 11.5px;
+    gap: 5px;
+  }
+
+  /* Tour Banner positioned cleanly below compact toolbar */
+  .tour-banner {
+    top: 52px;
+    width: calc(100% - 20px);
     padding: 10px 12px;
   }
-  .workspace {
+}
+
+/* PHONES (≤ 640px) Extra Compact Polish */
+@media (max-width: 640px) {
+  .topbar {
+    height: 50px;
+    padding: 0 8px;
+  }
+  .workspace,
+  .workspace.drawer-collapsed {
+    height: calc(100dvh - 50px);
+  }
+  .search-kbd {
+    display: none;
+  }
+  .stat-pill.mastery-trigger {
+    padding: 4px 8px;
+    font-size: 10.5px;
+  }
+  .theme-switch {
+    padding: 3px 4px;
+    gap: 2px;
+  }
+  .theme-dot {
+    width: 19px;
+    height: 19px;
+  }
+  .swatch {
+    width: 12px;
+    height: 12px;
+  }
+  .lang-btn {
+    padding: 3px 7px;
+    font-size: 10.5px;
+  }
+  .dock-item {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  .enc-meta-grid {
     grid-template-columns: 1fr;
-    height: auto;
   }
-  .viewport-wrap {
-    height: 62vh;
+  .modal-backdrop {
+    padding: 10px;
   }
-  .sidebar {
-    overflow: visible;
+  .modal-dialog {
+    max-height: 90dvh;
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-text {
+    display: none;
+  }
+  .topbar-search-pill span[data-i18n] {
+    display: none;
+  }
+  .topbar-search-pill {
+    padding: 6px 9px;
   }
 }
 

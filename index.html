@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Anatoma 3D — Human Body Atlas &amp; Simulation</title>
+  <meta name="description" content="Interactive 3D Human Body Atlas, Physiology Simulator, Pathology Lab & Educational Game (English & Hebrew)." />
+  <meta name="theme-color" content="#0ea5e9" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -239,11 +242,19 @@
           <span class="dock-ico">⚡</span>
           <span class="dock-label" data-i18n="dockPhysio">Physiology</span>
         </button>
+        <button class="dock-item mobile-only-dock" data-dock="info">
+          <span class="dock-ico">📖</span>
+          <span class="dock-label" data-i18n="tabExplore">Encyclopedia</span>
+        </button>
       </nav>
     </section>
 
     <!-- END SIDEBAR: ENCYCLOPEDIA INSPECTOR & GAME HUB -->
-    <aside class="sidebar sidebar-end">
+    <aside class="sidebar sidebar-end" id="info-drawer">
+      <div class="info-sheet-bar">
+        <span class="sheet-handle" aria-hidden="true"></span>
+        <button class="drawer-close-btn" id="btn-close-info-sheet" aria-label="Close">✕</button>
+      </div>
       <nav class="panel-mode-tabs" aria-label="Application Modes">
         <button class="mode-tab active" data-mode="explore">
           <span class="tab-ico">📖</span>
